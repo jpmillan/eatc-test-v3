@@ -1,0 +1,4 @@
+com\eatclub\challenge\EatClubApplication.class
+com\eatclub\challenge\model\Restaurant.class
+com\eatclub\challenge\service\DealService.class
+com\eatclub\challenge\model\Deal.class

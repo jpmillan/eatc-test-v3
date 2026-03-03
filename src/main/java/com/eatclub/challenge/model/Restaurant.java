@@ -1,4 +1,4 @@
-package main.java.com.eatclub.challenge.model;
+package com.eatclub.challenge.model;
 
 import java.util.List;
 
