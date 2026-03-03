@@ -78,3 +78,7 @@ buildNumber.properties
 .vscode/
 .factorypath
 .classpath
+
+
+# Intellij
+.idea/
