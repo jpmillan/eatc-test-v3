@@ -69,7 +69,7 @@ public class DealController {
         return !target.isBefore(start) && !target.isAfter(end);
     }
 
-
+    //mapping models to dto
     private DealResultDTO mapToDto(Restaurant r, Deal d) {
         DealResultDTO dto = new DealResultDTO();
         dto.restaurantObjectId = r.getId();
