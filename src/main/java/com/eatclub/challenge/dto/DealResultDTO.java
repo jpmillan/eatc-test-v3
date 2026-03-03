@@ -5,6 +5,9 @@ public class DealResultDTO {
     public String restaurantName;
     public String restaurantAddress1;
     public String restaurantSuburb;
+    public String restaurantOpen; 
+    public String restaurantClose; 
+
     public String dealObjectId;
     public String discount;
     public boolean dineIn;

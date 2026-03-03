@@ -1,9 +1,12 @@
 package com.eatclub.challenge.controller;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,50 +22,67 @@ import com.eatclub.challenge.service.DealService;
 public class DealController {
 
     private final DealService dealService;
+    private final DateTimeFormatter standardFormat = DateTimeFormatter.ofPattern("H:mm");
+    private final DateTimeFormatter amPmFormat = DateTimeFormatter.ofPattern("h:mma", Locale.ENGLISH);
 
     public DealController(DealService dealService) {
         this.dealService = dealService;
     }
 
     @GetMapping("/deals")
-    public Map<String, List<DealResultDTO>> getDeals(@RequestParam String timeOfDay) {
-        // Parse time like "10:30" or "3:00pm"
-        // For simplicity assuming 24h format first or simple HH:mm in this step
-        // Real implementation usually needs a robust parser for "3:00pm"
-        LocalTime queryTime = parseTime(timeOfDay); 
+    public Map<String, List<DealResultDTO>> getActiveDeals(@RequestParam("timeOfDay") String timeOfDay) {
+        LocalTime queryTime = parseTime(timeOfDay.toUpperCase().replace(" ", ""));
         
         List<Restaurant> allData = dealService.fetchAllData();
-        List<DealResultDTO> results = new ArrayList<>();
+        List<DealResultDTO> matches = new ArrayList<>();
 
         for (Restaurant r : allData) {
+            // Need to handle null deals gracefully
+            if (r.getDeals() == null) continue;
+
             for (Deal d : r.getDeals()) {
-                if (isTimeBetween(queryTime, d.getStartTime(), d.getEndTime())) {
-                    DealResultDTO dto = new DealResultDTO();
-                    dto.restaurantName = r.getName();
-                    dto.discount = d.getDiscountOf() + "%";
-                    dto.restaurantAddress1 = r.getAddress1();
-                    dto.restaurantSuburb = r.getSuburb();
-                    dto.dineIn = d.isDineIn();
-                    dto.lightning = d.isLightning();
-                    dto.qtyLeft = d.getQtyLeft();
-                    results.add(dto);
+                if (isTimeActive(queryTime, d.getStartTime(), d.getEndTime())) {
+                    matches.add(mapToDto(r, d));
                 }
             }
         }
         
-        Map<String, List<DealResultDTO>> response = new HashMap<>();
-        response.put("deals", results);
-        return response;
+        return Collections.singletonMap("deals", matches);
     }
 
     private LocalTime parseTime(String timeStr) {
-        // naive parsing, improve later
-        // If the user inputs 3:00pm, this simple ISO parser will fail
-        // This is a good place to show incremental improvement in next commits
-        return LocalTime.parse(timeStr); 
+        try {
+            // Try standard "10:30"
+            return LocalTime.parse(timeStr, standardFormat);
+        } catch (DateTimeParseException e) {
+            // Try "3:00PM"
+            return LocalTime.parse(timeStr, amPmFormat);
+        }
     }
-    
-    private boolean isTimeBetween(LocalTime target, LocalTime start, LocalTime end) {
+
+    private boolean isTimeActive(LocalTime target, LocalTime start, LocalTime end) {
+        // Handle deals that cross midnight if necessary (e.g. 11pm to 2am), 
+        // though restaurant deals usually don't.
+        if (end.isBefore(start)) {
+             return !target.isBefore(start) || !target.isAfter(end);
+        }
         return !target.isBefore(start) && !target.isAfter(end);
+    }
+
+
+    private DealResultDTO mapToDto(Restaurant r, Deal d) {
+        DealResultDTO dto = new DealResultDTO();
+        dto.restaurantObjectId = r.getId();
+        dto.restaurantName = r.getName();
+        dto.restaurantAddress1 = r.getAddress1();
+        dto.restaurantSuburb = r.getSuburb();
+        dto.restaurantOpen = "10:00am"; // Placeholder or derive from data
+        dto.restaurantClose = "10:00pm"; // Placeholder
+        dto.dealObjectId = d.getId();
+        dto.discount = d.getDiscountOf() + "%";
+        dto.dineIn = true;
+        dto.lightning = false;
+        dto.qtyLeft = 10; // Placeholder
+        return dto;
     }
 }

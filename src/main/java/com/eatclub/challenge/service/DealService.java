@@ -1,11 +1,14 @@
 package com.eatclub.challenge.service;
 
-import com.eatclub.challenge.model.Restaurant;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import com.eatclub.challenge.model.Restaurant;
 
 @Service
 public class DealService {
@@ -17,8 +20,7 @@ public class DealService {
         try {
             Restaurant[] response = restTemplate.getForObject(DATA_URL, Restaurant[].class);
             return response != null ? Arrays.asList(response) : new ArrayList<>();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (RestClientException e) {
             return new ArrayList<>();
         }
     }

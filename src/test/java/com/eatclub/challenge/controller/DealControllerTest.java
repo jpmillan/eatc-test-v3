@@ -51,7 +51,7 @@ public class DealControllerTest {
     @Test
     void testGetDeals_TimeInsideWindow() {
         // Test standard time format
-        Map<String, List<DealResultDTO>> result = dealController.getDeals("11:00");
+        Map<String, List<DealResultDTO>> result = dealController.getActiveDeals("11:00");
         assertFalse(result.get("deals").isEmpty());
         assertEquals("Test Maccas", result.get("deals").get(0).restaurantName);
     }
