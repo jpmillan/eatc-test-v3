@@ -1,4 +1,5 @@
 package com.eatclub.challenge.controller;
+
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +7,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,31 +20,31 @@ import com.eatclub.challenge.model.Deal;
 import com.eatclub.challenge.model.Restaurant;
 import com.eatclub.challenge.service.DealService;
 
-
 @SpringBootTest
 public class DealControllerTest {
+
     private DealService dealService;
     private DealController dealController;
 
-@BeforeEach
+    @BeforeEach
     void setUp() {
         // Mock the service so we control the data
         dealService = Mockito.mock(DealService.class);
         dealController = new DealController(dealService);
-        
+
         // Setup dummy data
         List<Restaurant> mockData = new ArrayList<>();
         Restaurant r = new Restaurant();
         r.setName("Test Maccas");
         List<Deal> deals = new ArrayList<>();
-        
+
         Deal d1 = new Deal();
         // Deal is active from 10:00 to 12:00
-        d1.setStartTime(LocalTime.of(10, 0)); 
+        d1.setStartTime(LocalTime.of(10, 0));
         d1.setEndTime(LocalTime.of(12, 0));
         d1.setDiscountOf(20);
         deals.add(d1);
-        
+
         r.setDeals(deals);
         mockData.add(r);
 
@@ -75,12 +77,49 @@ public class DealControllerTest {
         deals.add(d);
         r.setDeals(deals);
         pmData.add(r);
-        
+
         when(dealService.fetchAllData()).thenReturn(pmData);
 
         // Test parsing "3:00pm"
         Map<String, List<DealResultDTO>> result = dealController.getActiveDeals("03:00pm");
         assertFalse(result.get("deals").isEmpty());
+    }
+
+    @Test
+    void testPeakTimeCalculation() {
+        // Setup scenario: 
+        // Restaurant A has deal 10:00 - 11:00
+        // Restaurant B has deal 10:30 - 11:30
+        // Peak overlap should be 10:30 - 11:00
+
+        List<Restaurant> scenarioData = new ArrayList<>();
+
+        Restaurant r1 = new Restaurant();
+        Deal d1 = new Deal();
+        d1.setStartTime(LocalTime.of(10, 0));
+        d1.setEndTime(LocalTime.of(11, 0));
+        r1.setDeals(List.of(d1));
+
+        Restaurant r2 = new Restaurant();
+        Deal d2 = new Deal();
+        d2.setStartTime(LocalTime.of(10, 30));
+        d2.setEndTime(LocalTime.of(11, 30));
+        r2.setDeals(List.of(d2));
+
+        scenarioData.add(r1);
+        scenarioData.add(r2);
+
+        when(dealService.fetchAllData()).thenReturn(scenarioData);
+
+        var peakResult = dealController.getPeakTime();
+
+        // We expect the peak start to include the overlap
+        assertNotNull(peakResult);
+        // should pick the first "max" block it finds
+        String start = peakResult.peakTimeStart;
+
+        // Assert start is within the overlapping window
+        assertTrue(start.equals("10:30") || start.equals("10:45"));
     }
 
 }

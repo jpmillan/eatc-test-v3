@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eatclub.challenge.dto.DealResultDTO;
+import com.eatclub.challenge.dto.PeakTimeDTO;
 import com.eatclub.challenge.model.Deal;
 import com.eatclub.challenge.model.Restaurant;
 import com.eatclub.challenge.service.DealService;
@@ -84,5 +85,42 @@ public class DealController {
         dto.lightning = false;
         dto.qtyLeft = 10; // Placeholder
         return dto;
+    }
+
+    @GetMapping("/peak-time")
+    public PeakTimeDTO getPeakTime() {
+        List<Restaurant> allData = dealService.fetchAllData();
+        
+        // Strategy: Iterate quarter hour of a day (or 15 mins) and count active deals
+        int maxDeals = 0;
+        LocalTime bestTime = LocalTime.MIN;
+
+        // Checking every 15 minutes
+        LocalTime cursor = LocalTime.of(0, 0);
+        while(true) {
+            int currentCount = 0;
+            for (Restaurant r : allData) {
+                if (r.getDeals() == null) continue;
+                for (Deal d : r.getDeals()) {
+                    if (isTimeActive(cursor, d.getStartTime(), d.getEndTime())) {
+                        currentCount++;
+                    }
+                }
+            }
+            
+            if (currentCount > maxDeals) {
+                maxDeals = currentCount;
+                bestTime = cursor;
+            }
+            
+            cursor = cursor.plusMinutes(15);
+            if (cursor.equals(LocalTime.of(0, 0))) break; // Back to start
+        }
+
+        // Return a window (e.g., the best 15 min block or just start/end of that block)
+        return new PeakTimeDTO(
+            bestTime.format(standardFormat), 
+            bestTime.plusMinutes(15).format(standardFormat)
+        );
     }
 }
