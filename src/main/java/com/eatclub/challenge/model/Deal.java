@@ -1,12 +1,16 @@
 package com.eatclub.challenge.model;
 
 import java.time.LocalTime;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Deal {
+
     private String id;
     private int discountOf;
+    private boolean dineIn = true;
+    private boolean lightning = false;
+    private Integer qtyLeft = 10;
 
     // Assuming format is HH:mm:ss judging by standard JSON outputs usually,
     // but we will need to verify the source data format.
@@ -47,5 +51,29 @@ public class Deal {
 
     public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
+    }
+
+    public Integer getQtyLeft() {
+        return qtyLeft;
+    }
+
+    public void setQtyLeft(Integer qtyLeft) {
+        this.qtyLeft = qtyLeft;
+    }
+
+    public boolean isDineIn() {
+        return dineIn;
+    }
+
+    public void setDineIn(boolean dineIn) {
+        this.dineIn = dineIn;
+    }
+
+    public boolean isLightning() {
+        return lightning;
+    }
+
+    public void setLightning(boolean lightning) {
+        this.lightning = lightning;
     }
 }
