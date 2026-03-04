@@ -34,14 +34,17 @@ public class DealController {
     public Map<String, List<DealResultDTO>> getActiveDeals(@RequestParam("timeOfDay") String timeOfDay) {
         LocalTime queryTime = parseTime(timeOfDay.toUpperCase().replace(" ", ""));
         
+        System.out.println("DEBUG: Querying for time: " + queryTime);
+
         List<Restaurant> allData = dealService.fetchAllData();
         List<DealResultDTO> matches = new ArrayList<>();
 
         for (Restaurant r : allData) {
-            // Need to handle null deals gracefully
             if (r.getDeals() == null) continue;
 
             for (Deal d : r.getDeals()) {
+                System.out.println("Checking Deal: " + d.getId() + " Start: " + d.getStartTime() + " End: " + d.getEndTime());
+
                 if (isTimeActive(queryTime, d.getStartTime(), d.getEndTime())) {
                     matches.add(mapToDto(r, d));
                 }
@@ -62,8 +65,11 @@ public class DealController {
     }
 
     private boolean isTimeActive(LocalTime target, LocalTime start, LocalTime end) {
-        // Handle deals that cross midnight if necessary (e.g. 11pm to 2am), 
-        // though restaurant deals usually don't.
+        
+        if (target == null || start == null || end == null) {
+            return false; 
+        }
+        // Handle deals that cross midnight
         if (end.isBefore(start)) {
              return !target.isBefore(start) || !target.isAfter(end);
         }
@@ -77,7 +83,7 @@ public class DealController {
         dto.restaurantName = r.getName();
         dto.restaurantAddress1 = r.getAddress1();
         dto.restaurantSuburb = r.getSuburb();
-        dto.restaurantOpen = "10:00am"; // Placeholder or derive from data
+        dto.restaurantOpen = "10:00am"; // Placeholder
         dto.restaurantClose = "10:00pm"; // Placeholder
         dto.dealObjectId = d.getId();
         dto.discount = d.getDiscountOf() + "%";

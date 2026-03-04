@@ -1,79 +1,96 @@
 package com.eatclub.challenge.model;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.Locale;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Deal {
 
+    @JsonProperty("objectId")
     private String id;
+    
+    @JsonProperty("discount")
     private int discountOf;
-    private boolean dineIn = true;
-    private boolean lightning = false;
-    private Integer qtyLeft = 10;
-
-    // Assuming format is HH:mm:ss judging by standard JSON outputs usually,
-    // but we will need to verify the source data format.
-    @JsonFormat(pattern = "HH:mm")
+    
+    @JsonIgnore // Internal use, populated via setters
     private LocalTime startTime;
+    
+    @JsonIgnore // Internal use
+    private LocalTime endTime; 
 
-    @JsonFormat(pattern = "HH:mm")
-    private LocalTime endTime;
+    // --- JSON Handling (String inputs) ---
 
-    // Getters and Setters
-    public String getId() {
-        return id;
+    // Case-insensitive formatter for "3:00pm" or "3:00PM"
+    private static final DateTimeFormatter TIME_FORMATTER = new DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendPattern("h:mma")
+            .toFormatter(Locale.ENGLISH);
+
+    @JsonSetter("open")
+    public void setOpenTimeStr(String timeStr) {
+        try {
+            this.startTime = LocalTime.parse(timeStr, TIME_FORMATTER);
+        } catch (Exception e) {
+            // Fallback or log if format changes
+            System.err.println("Failed to parse time: " + timeStr);
+        }
     }
 
-    public void setId(String id) {
-        this.id = id;
+    @JsonSetter("close")
+    public void setCloseTimeStr(String timeStr) {
+        try {
+            this.endTime = LocalTime.parse(timeStr, TIME_FORMATTER);
+        } catch (Exception e) {
+            System.err.println("Failed to parse time: " + timeStr);
+        }
     }
 
-    public int getDiscountOf() {
-        return discountOf;
-    }
-
-    public void setDiscountOf(int discountOf) {
-        this.discountOf = discountOf;
-    }
-
-    public LocalTime getStartTime() {
-        return startTime;
-    }
+    // --- Standard Setters (Required for Unit Tests) ---
 
     public void setStartTime(LocalTime startTime) {
         this.startTime = startTime;
-    }
-
-    public LocalTime getEndTime() {
-        return endTime;
     }
 
     public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
     }
 
-    public Integer getQtyLeft() {
-        return qtyLeft;
-    }
+    // --- Getters ---
 
-    public void setQtyLeft(Integer qtyLeft) {
-        this.qtyLeft = qtyLeft;
-    }
+    public LocalTime getStartTime() { return startTime; }
+    public LocalTime getEndTime() { return endTime; }
 
-    public boolean isDineIn() {
-        return dineIn;
-    }
+    // --- Other Fields ---
 
-    public void setDineIn(boolean dineIn) {
-        this.dineIn = dineIn;
-    }
+    @JsonProperty("dineIn")
+    private boolean dineIn; 
+    
+    @JsonProperty("lightning")
+    private boolean lightning;
+    
+    @JsonProperty("qtyLeft")
+    private Integer quantity; 
 
-    public boolean isLightning() {
-        return lightning;
-    }
-
-    public void setLightning(boolean lightning) {
-        this.lightning = lightning;
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public int getDiscountOf() { return discountOf; }
+    public void setDiscountOf(int discountOf) { this.discountOf = discountOf; }
+    public boolean isDineIn() { return dineIn; }
+    public void setDineIn(boolean dineIn) { this.dineIn = dineIn; }
+    public boolean isLightning() { return lightning; }
+    public void setLightning(boolean lightning) { this.lightning = lightning; }
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    
+    @Override
+    public String toString() {
+        return "Deal{id='" + id + "', start=" + startTime + ", end=" + endTime + "}";
     }
 }

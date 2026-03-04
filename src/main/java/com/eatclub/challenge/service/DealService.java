@@ -1,26 +1,50 @@
 package com.eatclub.challenge.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import com.eatclub.challenge.model.Restaurant;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class DealService {
 
-    private static final String DATA_URL = "https://eccdn.com.au/misc/challengedata.json";
-    
+    private final ObjectMapper objectMapper;
+
+    public DealService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     public List<Restaurant> fetchAllData() {
-        RestTemplate restTemplate = new RestTemplate();
         try {
-            Restaurant[] response = restTemplate.getForObject(DATA_URL, Restaurant[].class);
-            return response != null ? Arrays.asList(response) : new ArrayList<>();
-        } catch (RestClientException e) {
+            ClassPathResource resource = new ClassPathResource("challengedata.json");
+            JsonNode root = objectMapper.readTree(resource.getInputStream());
+
+            List<Restaurant> results = new ArrayList<>();
+            if (root.isArray()) {
+                results = Arrays.asList(objectMapper.treeToValue(root, Restaurant[].class));
+            } else if (root.isObject()) {
+                 // handle object wrapper
+                 Iterator<JsonNode> elements = root.elements();
+                 while(elements.hasNext()) {
+                     JsonNode n = elements.next();
+                     if (n.isArray()) {
+                         results = Arrays.asList(objectMapper.treeToValue(n, Restaurant[].class));
+                         break;
+                     }
+                 }
+            }
+            return results;
+
+        } catch (IOException e) {
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }

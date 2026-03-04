@@ -31,15 +31,15 @@ Returns a list of all restaurant deals active at the specified time.
 *   `timeOfDay`: String (Formats supported: `HH:mm`, `H:mm`, `h:mma` e.g., "10:30", "13:00", "3:00pm")
 
 **Example Request:**
-`GET http://localhost:8080/deals?timeOfDay=3:00pm`
+`GET http://localhost:8080/deals?timeOfDay=6:00pm`
 
 **Response:**
 ```json
 {
   "deals": [
     {
-      "restaurantName": "Example Burger",
-      "discount": "20%",
+      "restaurantName": "Masala Kitchen",
+      "discount": "50%",
       ...
     }
   ]
@@ -54,8 +54,8 @@ Calculates the time window with the highest number of concurrent active deals.
 **Response:**
 ```json
 {
-  "peakTimeStart": "18:30",
-  "peakTimeEnd": "18:45"
+  "peakTimeStart": "15:00",
+  "peakTimeEnd": "15:15"
 }
 ```
 
