@@ -25,8 +25,6 @@ public class Deal {
     @JsonIgnore // Internal use
     private LocalTime endTime; 
 
-    // --- JSON Handling (String inputs) ---
-
     // Case-insensitive formatter for "3:00pm" or "3:00PM"
     private static final DateTimeFormatter TIME_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
